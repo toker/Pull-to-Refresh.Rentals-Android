@@ -1,14 +1,13 @@
 package com.yalantis.pulltorefresh.sample;
 
-import android.content.Context;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.ImageView;
-import android.widget.ListView;
 
 import com.yalantis.pulltorefresh.library.PullToRefreshView;
 
@@ -23,13 +22,15 @@ public class PullToRefreshActivity extends ActionBarActivity {
 
     private PullToRefreshView mPullToRefreshView;
 
+    private List<Map<String, Integer>> sampleList;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_pull_to_refresh);
 
         Map<String, Integer> map;
-        List<Map<String, Integer>> sampleList = new ArrayList<>();
+        sampleList = new ArrayList<>();
 
         int[] icons = {
                 R.drawable.icon_1,
@@ -43,13 +44,14 @@ public class PullToRefreshActivity extends ActionBarActivity {
 
         for (int i = 0; i < icons.length; i++) {
             map = new HashMap<>();
-            map.put(SampleAdapter.KEY_ICON, icons[i]);
-            map.put(SampleAdapter.KEY_COLOR, colors[i]);
+            map.put(SampleHolder.KEY_ICON, icons[i]);
+            map.put(SampleHolder.KEY_COLOR, colors[i]);
             sampleList.add(map);
         }
 
-        ListView listView = (ListView) findViewById(R.id.list_view);
-        listView.setAdapter(new SampleAdapter(this, R.layout.list_item, sampleList));
+        RecyclerView mRecyclerView = (RecyclerView) findViewById(R.id.list_view);
+        mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        mRecyclerView.setAdapter(new SampleAdapter());
 
         mPullToRefreshView = (PullToRefreshView) findViewById(R.id.pull_to_refresh);
         mPullToRefreshView.setOnRefreshListener(new PullToRefreshView.OnRefreshListener() {
@@ -65,42 +67,47 @@ public class PullToRefreshActivity extends ActionBarActivity {
         });
     }
 
-    class SampleAdapter extends ArrayAdapter<Map<String, Integer>> {
+    private class SampleHolder extends RecyclerView.ViewHolder {
 
         public static final String KEY_ICON = "icon";
         public static final String KEY_COLOR = "color";
 
-        private final LayoutInflater mInflater;
-        private final List<Map<String, Integer>> mData;
+        private View mViewItem;
+        private ImageView mImageViewIcon;
 
-        public SampleAdapter(Context context, int layoutResourceId, List<Map<String, Integer>> data) {
-            super(context, layoutResourceId, data);
-            mData = data;
-            mInflater = LayoutInflater.from(context);
+        private Map<String, Integer> mItem;
+
+        public SampleHolder(View itemView) {
+            super(itemView);
+            mViewItem = itemView;
+            mImageViewIcon = (ImageView) itemView.findViewById(R.id.image_view_icon);
+        }
+
+        public void bindItem(Map<String, Integer> item) {
+            mItem = item;
+            mImageViewIcon.setImageResource(mItem.get(KEY_ICON));
+            mViewItem.setBackgroundResource(mItem.get(KEY_COLOR));
+        }
+    }
+
+    class SampleAdapter extends RecyclerView.Adapter<SampleHolder> {
+
+        @Override
+        public SampleHolder onCreateViewHolder(ViewGroup parent, int pos) {
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.list_item, parent, false);
+            return new SampleHolder(view);
         }
 
         @Override
-        public View getView(final int position, View convertView, ViewGroup parent) {
-            final ViewHolder viewHolder;
-            if (convertView == null) {
-                viewHolder = new ViewHolder();
-                convertView = mInflater.inflate(R.layout.list_item, parent, false);
-                viewHolder.imageViewIcon = (ImageView) convertView.findViewById(R.id.image_view_icon);
-                convertView.setTag(viewHolder);
-            } else {
-                viewHolder = (ViewHolder) convertView.getTag();
-            }
-
-            viewHolder.imageViewIcon.setImageResource(mData.get(position).get(KEY_ICON));
-            convertView.setBackgroundResource(mData.get(position).get(KEY_COLOR));
-
-            return convertView;
+        public void onBindViewHolder(SampleHolder viewHolder, int pos) {
+            Map<String, Integer> item = sampleList.get(pos);
+            viewHolder.bindItem(item);
         }
 
-        class ViewHolder {
-            ImageView imageViewIcon;
+        @Override
+        public int getItemCount() {
+            return sampleList.size();
         }
-
     }
 
 }
