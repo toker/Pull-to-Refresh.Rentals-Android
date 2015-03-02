@@ -22,7 +22,8 @@ import com.yalantis.pulltorefresh.library.util.Utils;
  * Created by Oleksii Shliama on 22/12/2014.
  * https://dribbble.com/shots/1650317-Pull-to-Refresh-Rentals
  */
-public class SunRefreshView extends BaseRefreshView implements Animatable {
+public class SunRefreshView extends BaseRefreshView
+							implements Animatable {
 
     private static final float SCALE_START_PERCENT = 0.5f;
     private static final int ANIMATION_DURATION = 1000;
@@ -242,6 +243,8 @@ public class SunRefreshView extends BaseRefreshView implements Animatable {
 
     public void setRotate(float rotate) {
         mRotate = rotate;
+
+		//TODO it causes redraw, I believe
         invalidateSelf();
     }
 
@@ -272,7 +275,7 @@ public class SunRefreshView extends BaseRefreshView implements Animatable {
 
     @Override
     public int getOpacity() {
-        return PixelFormat.TRANSLUCENT;
+        return super.getOpacity();
     }
 
     @Override

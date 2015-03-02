@@ -5,7 +5,7 @@ import android.content.res.TypedArray;
 import android.support.v4.view.MotionEventCompat;
 import android.support.v4.view.ViewCompat;
 import android.util.AttributeSet;
-import android.util.TypedValue;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
@@ -18,6 +18,7 @@ import android.widget.AbsListView;
 import android.widget.ImageView;
 
 import com.yalantis.pulltorefresh.library.refresh_view.BaseRefreshView;
+import com.yalantis.pulltorefresh.library.refresh_view.SnaappyRefreshView;
 import com.yalantis.pulltorefresh.library.refresh_view.SunRefreshView;
 import com.yalantis.pulltorefresh.library.util.Utils;
 
@@ -25,7 +26,9 @@ import java.security.InvalidParameterException;
 
 public class PullToRefreshView extends ViewGroup {
 
-    private static final int DRAG_MAX_DISTANCE = 120;
+	private static final String TAG = "PullToRefreshView";
+
+    private static final int DRAG_MAX_DISTANCE = 130;
     private static final float DRAG_RATE = .5f;
     private static final float DECELERATE_INTERPOLATION_FACTOR = 2f;
 
@@ -80,7 +83,8 @@ public class PullToRefreshView extends ViewGroup {
         setRefreshing(false);
         switch (type) {
             case STYLE_SUN:
-                mBaseRefreshView = new SunRefreshView(getContext(), this);
+                //mBaseRefreshView = new SunRefreshView(getContext(), this);
+				mBaseRefreshView = new SnaappyRefreshView(getContext(), this);
                 break;
             case STYLE_JET:
                 // TODO
@@ -102,8 +106,11 @@ public class PullToRefreshView extends ViewGroup {
         if (mTarget == null)
             return;
 
-        widthMeasureSpec = MeasureSpec.makeMeasureSpec(getMeasuredWidth() - getPaddingRight() - getPaddingLeft(), MeasureSpec.EXACTLY);
-        heightMeasureSpec = MeasureSpec.makeMeasureSpec(getMeasuredHeight() - getPaddingTop() - getPaddingBottom(), MeasureSpec.EXACTLY);
+		//NOTE figure out how it works
+        widthMeasureSpec = MeasureSpec.makeMeasureSpec(
+				getMeasuredWidth() - getPaddingRight() - getPaddingLeft(), MeasureSpec.EXACTLY);
+        heightMeasureSpec = MeasureSpec.makeMeasureSpec(
+				getMeasuredHeight() - getPaddingTop() - getPaddingBottom(), MeasureSpec.EXACTLY);
         mTarget.measure(widthMeasureSpec, heightMeasureSpec);
         mRefreshView.measure(widthMeasureSpec, heightMeasureSpec);
     }
@@ -111,12 +118,18 @@ public class PullToRefreshView extends ViewGroup {
     private void ensureTarget() {
         if (mTarget != null)
             return;
-        if (getChildCount() > 0) {
-            for (int i = 0; i < getChildCount(); i++) {
-                View child = getChildAt(i);
-                if (child != mRefreshView)
-                    mTarget = child;
-            }
+
+		//NOTE it seems mTarget is ListView, announced in xml
+
+		int count = getChildCount();
+		Log.i(TAG, "child count: " + count);
+        for (int i = 0; i < count; i++) {
+        	View child = getChildAt(i);
+
+			Log.i(TAG, "child class: " + child.getClass().toString());
+
+            if (child != mRefreshView)
+            	mTarget = child;
         }
     }
 
@@ -124,7 +137,7 @@ public class PullToRefreshView extends ViewGroup {
     public boolean onInterceptTouchEvent(MotionEvent ev) {
 
         if (!isEnabled() || canChildScrollUp() || mRefreshing) {
-            return false;
+            return false; //let the child handle MotionEvent
         }
 
         final int action = MotionEventCompat.getActionMasked(ev);
@@ -140,6 +153,7 @@ public class PullToRefreshView extends ViewGroup {
                 }
                 mInitialMotionY = initialMotionY;
                 break;
+
             case MotionEvent.ACTION_MOVE:
                 if (mActivePointerId == INVALID_POINTER) {
                     return false;
@@ -153,11 +167,13 @@ public class PullToRefreshView extends ViewGroup {
                     mIsBeingDragged = true;
                 }
                 break;
+
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
                 mIsBeingDragged = false;
                 mActivePointerId = INVALID_POINTER;
                 break;
+
             case MotionEventCompat.ACTION_POINTER_UP:
                 onSecondaryPointerUp(ev);
                 break;
@@ -168,6 +184,9 @@ public class PullToRefreshView extends ViewGroup {
 
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
+
+		//NOTE if onInterceptTouchEvent() returned true
+		// then we're here
 
         if (!mIsBeingDragged) {
             return super.onTouchEvent(ev);
@@ -199,6 +218,8 @@ public class PullToRefreshView extends ViewGroup {
                 float extraMove = (slingshotDist) * tensionPercent / 2;
                 int targetY = (int) ((slingshotDist * boundedDragPercent) + extraMove);
 
+				//NOTE all this shit for targetY calculation
+
                 mBaseRefreshView.setPercent(mCurrentDragPercent, true);
                 setTargetOffsetTop(targetY - mCurrentOffsetTop, true);
                 break;
@@ -223,13 +244,14 @@ public class PullToRefreshView extends ViewGroup {
                     setRefreshing(true, true);
                 } else {
                     mRefreshing = false;
+
+					//NOTE hiding refresh view, no refreshing
                     animateOffsetToStartPosition();
                 }
                 mActivePointerId = INVALID_POINTER;
                 return false;
             }
         }
-
         return true;
     }
 
@@ -315,6 +337,10 @@ public class PullToRefreshView extends ViewGroup {
             mRefreshing = refreshing;
             if (mRefreshing) {
                 mBaseRefreshView.setPercent(1f, true);
+
+				//NOTE we overscrolled listview from correct refreshing
+				// position, so need correcting its position
+				// relatively to refreshview
                 animateOffsetToCorrectPosition();
             } else {
                 animateOffsetToStartPosition();
@@ -368,9 +394,9 @@ public class PullToRefreshView extends ViewGroup {
         if (android.os.Build.VERSION.SDK_INT < 14) {
             if (mTarget instanceof AbsListView) {
                 final AbsListView absListView = (AbsListView) mTarget;
-                return absListView.getChildCount() > 0
-                        && (absListView.getFirstVisiblePosition() > 0 || absListView.getChildAt(0)
-                        .getTop() < absListView.getPaddingTop());
+                return absListView.getChildCount() > 0 &&
+						(absListView.getFirstVisiblePosition() > 0 ||
+							absListView.getChildAt(0).getTop() < absListView.getPaddingTop());
             } else {
                 return mTarget.getScrollY() > 0;
             }
@@ -381,6 +407,8 @@ public class PullToRefreshView extends ViewGroup {
 
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
+
+		//NOTE figure out how it works
 
         ensureTarget();
         if (mTarget == null)
@@ -393,7 +421,8 @@ public class PullToRefreshView extends ViewGroup {
         int right = getPaddingRight();
         int bottom = getPaddingBottom();
 
-        mTarget.layout(left, top + mCurrentOffsetTop, left + width - right, top + height - bottom + mCurrentOffsetTop);
+        mTarget.layout(left, top + mCurrentOffsetTop, left + width - right,
+				top + height - bottom + mCurrentOffsetTop);
         mRefreshView.layout(left, top, left + width - right, top + height - bottom);
     }
 

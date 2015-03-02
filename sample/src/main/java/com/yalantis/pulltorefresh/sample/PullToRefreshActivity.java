@@ -19,7 +19,7 @@ import java.util.Map;
 
 public class PullToRefreshActivity extends ActionBarActivity {
 
-    public static final int REFRESH_DELAY = 2000;
+    public static final int REFRESH_DELAY = 3000;
 
     private PullToRefreshView mPullToRefreshView;
 
@@ -55,6 +55,8 @@ public class PullToRefreshActivity extends ActionBarActivity {
         mPullToRefreshView.setOnRefreshListener(new PullToRefreshView.OnRefreshListener() {
             @Override
             public void onRefresh() {
+				//TODO complete refreshing in REFRESH_DELAY seconds
+
                 mPullToRefreshView.postDelayed(new Runnable() {
                     @Override
                     public void run() {

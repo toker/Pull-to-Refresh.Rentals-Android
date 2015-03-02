@@ -8,20 +8,22 @@ import android.graphics.drawable.Drawable;
 
 import com.yalantis.pulltorefresh.library.PullToRefreshView;
 
-public abstract class BaseRefreshView extends Drawable implements Drawable.Callback, Animatable {
+public abstract class BaseRefreshView extends Drawable
+										implements Drawable.Callback, Animatable {
 
-    private PullToRefreshView mRefreshLayout;
+	//NOTE figure out what for it uses here
+    private PullToRefreshView mParentLayout;
 
     public BaseRefreshView(Context context, PullToRefreshView layout) {
-        mRefreshLayout = layout;
+        mParentLayout = layout;
     }
 
-    public Context getContext(){
-        return mRefreshLayout != null ? mRefreshLayout.getContext() : null;
+    public Context getContext() {
+        return mParentLayout != null ? mParentLayout.getContext() : null;
     }
 
-    public PullToRefreshView getRefreshLayout(){
-        return mRefreshLayout;
+    public PullToRefreshView getParentLayout(){
+        return mParentLayout;
     }
 
     public abstract void setPercent(float percent, boolean invalidate);
@@ -59,12 +61,9 @@ public abstract class BaseRefreshView extends Drawable implements Drawable.Callb
 
     @Override
     public void setAlpha(int alpha) {
-
     }
 
     @Override
     public void setColorFilter(ColorFilter cf) {
-
     }
-
 }
