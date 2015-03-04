@@ -11,7 +11,6 @@ import com.yalantis.pulltorefresh.library.PullToRefreshView;
 public abstract class BaseRefreshView extends Drawable
 										implements Drawable.Callback, Animatable {
 
-	//NOTE figure out what for it uses here
     private PullToRefreshView mParentLayout;
 
     public BaseRefreshView(Context context, PullToRefreshView layout) {

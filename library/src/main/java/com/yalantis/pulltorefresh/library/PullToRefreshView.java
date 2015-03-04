@@ -19,6 +19,7 @@ import android.widget.ImageView;
 
 import com.yalantis.pulltorefresh.library.refresh_view.BaseRefreshView;
 import com.yalantis.pulltorefresh.library.refresh_view.SnaappyRefreshView;
+import com.yalantis.pulltorefresh.library.refresh_view.SnaappyRefreshView2;
 import com.yalantis.pulltorefresh.library.util.Utils;
 
 import java.security.InvalidParameterException;
@@ -31,24 +32,28 @@ public class PullToRefreshView extends ViewGroup {
     //              насколько быстро  выдвигается refreshView
     //DRAG_MAX_DISTANCE - насколько далеко от вниз можно утащить ListView,
     //                      на сколько по высоте можно показать refreshView
-    //(120, 0.5)
 
-    private static final int DRAG_MAX_DISTANCE = 100;
-    private static final float DRAG_FACTOR = .55f;
+    //DRAG_MAX_DISTANCE=120, DRAG_FACTOR=0.5)
+
+    private static final int DRAG_MAX_DISTANCE = 160;
+    private static final float DRAG_FACTOR = .70f;
     private static final float DECELERATE_INTERPOLATION_FACTOR = 2f;
 
     public static final int STYLE_SUN = 0;
     public static final int STYLE_JET = 1;
-    public static final int MAX_OFFSET_ANIMATION_DURATION = 800;
+    public static final int MAX_OFFSET_ANIMATION_DURATION = 475;
 
     private static final int INVALID_POINTER = -1;
 
     private View mTarget;
-    private ImageView mRefreshView;
+    //private ImageView mRefreshView;
     private Interpolator mDecelerateInterpolator;
     private int mTouchSlop;
     private int mTotalDragDistance;
-    private BaseRefreshView mBaseRefreshView;
+
+    //private BaseRefreshView mBaseRefreshView;
+	private SnaappyRefreshView2 mSnaappyRefreshView;
+
     private float mCurrentDragPercent;
     private int mCurrentOffsetTop;
     private boolean mRefreshing;
@@ -74,11 +79,13 @@ public class PullToRefreshView extends ViewGroup {
         mTouchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
         mTotalDragDistance = Utils.convertDpToPixel(context, DRAG_MAX_DISTANCE);
 
-        mRefreshView = new ImageView(context);
+        //mRefreshView = new ImageView(context);
+		mSnaappyRefreshView = new SnaappyRefreshView2(getContext(), this);
 
         setRefreshStyle(type);
 
-        addView(mRefreshView);
+        //addView(mRefreshView);
+		addView(mSnaappyRefreshView);
 
         setWillNotDraw(false);
         ViewCompat.setChildrenDrawingOrderEnabled(this, true);
@@ -89,14 +96,15 @@ public class PullToRefreshView extends ViewGroup {
         switch (type) {
             case STYLE_SUN:
                 //mBaseRefreshView = new SunRefreshView(getContext(), this);
-				mBaseRefreshView = new SnaappyRefreshView(getContext(), this);
+				//mBaseRefreshView = new SnaappyRefreshView(getContext(), this);
+				//mSnaappyRefreshView = new SnaappyRefreshView2(getContext(), this);
                 break;
             case STYLE_JET:
                 // TODO
             default:
                 throw new InvalidParameterException("Type does not exist");
         }
-        mRefreshView.setImageDrawable(mBaseRefreshView);
+        //mRefreshView.setImageDrawable(mBaseRefreshView);
     }
 
     public int getTotalDragDistance() {
@@ -117,7 +125,8 @@ public class PullToRefreshView extends ViewGroup {
         heightMeasureSpec = MeasureSpec.makeMeasureSpec(
 				getMeasuredHeight() - getPaddingTop() - getPaddingBottom(), MeasureSpec.EXACTLY);
         mTarget.measure(widthMeasureSpec, heightMeasureSpec);
-        mRefreshView.measure(widthMeasureSpec, heightMeasureSpec);
+        //mRefreshView.measure(widthMeasureSpec, heightMeasureSpec);
+		mSnaappyRefreshView.measure(widthMeasureSpec, heightMeasureSpec);
     }
 
     private void ensureTarget() {
@@ -133,7 +142,7 @@ public class PullToRefreshView extends ViewGroup {
 
 			Log.i(TAG, "child class: " + child.getClass().toString());
 
-            if (child != mRefreshView)
+            if (child != /*mRefreshView*/ mSnaappyRefreshView)
             	mTarget = child;
         }
     }
@@ -225,7 +234,8 @@ public class PullToRefreshView extends ViewGroup {
 
 				//NOTE all this shit for targetY calculation
 
-                mBaseRefreshView.setPercent(mCurrentDragPercent, true);
+                //mBaseRefreshView.setPercent(mCurrentDragPercent, true);
+				mSnaappyRefreshView.setPercent(mCurrentDragPercent, true);
                 setTargetOffsetTop(targetY - mCurrentOffsetTop, true);
                 break;
             }
@@ -269,8 +279,9 @@ public class PullToRefreshView extends ViewGroup {
         mAnimateToStartPosition.setDuration(animationDuration);
         mAnimateToStartPosition.setInterpolator(mDecelerateInterpolator);
         mAnimateToStartPosition.setAnimationListener(mToStartListener);
-        mRefreshView.clearAnimation();
-        mRefreshView.startAnimation(mAnimateToStartPosition);
+
+		mSnaappyRefreshView.clearAnimation();
+		mSnaappyRefreshView.startAnimation(mAnimateToStartPosition);
     }
 
     private void animateOffsetToCorrectPosition() {
@@ -280,18 +291,19 @@ public class PullToRefreshView extends ViewGroup {
         mAnimateToCorrectPosition.reset();
         mAnimateToCorrectPosition.setDuration(MAX_OFFSET_ANIMATION_DURATION);
         mAnimateToCorrectPosition.setInterpolator(mDecelerateInterpolator);
-        mRefreshView.clearAnimation();
-        mRefreshView.startAnimation(mAnimateToCorrectPosition);
+
+		mSnaappyRefreshView.clearAnimation();
+		mSnaappyRefreshView.startAnimation(mAnimateToCorrectPosition);
 
         if (mRefreshing) {
-            mBaseRefreshView.start();
+            //mBaseRefreshView.start();
             if (mNotify) {
                 if (mListener != null) {
                     mListener.onRefresh();
                 }
             }
         } else {
-            mBaseRefreshView.stop();
+            /*mBaseRefreshView.stop();*/
             animateOffsetToStartPosition();
         }
         mCurrentOffsetTop = mTarget.getTop();
@@ -313,7 +325,8 @@ public class PullToRefreshView extends ViewGroup {
             int offset = targetTop - mTarget.getTop();
 
             mCurrentDragPercent = mFromDragPercent - (mFromDragPercent - 1.0f) * interpolatedTime;
-            mBaseRefreshView.setPercent(mCurrentDragPercent, false);
+            //mBaseRefreshView.setPercent(mCurrentDragPercent, false);
+			mSnaappyRefreshView.setPercent(mCurrentDragPercent, false);
 
             setTargetOffsetTop(offset, false /* requires update */);
         }
@@ -325,7 +338,8 @@ public class PullToRefreshView extends ViewGroup {
         int offset = targetTop - mTarget.getTop();
 
         mCurrentDragPercent = targetPercent;
-        mBaseRefreshView.setPercent(mCurrentDragPercent, true);
+        //mBaseRefreshView.setPercent(mCurrentDragPercent, true);
+		mSnaappyRefreshView.setPercent(mCurrentDragPercent, true);
         setTargetOffsetTop(offset, false);
     }
 
@@ -341,7 +355,8 @@ public class PullToRefreshView extends ViewGroup {
             ensureTarget();
             mRefreshing = refreshing;
             if (mRefreshing) {
-                mBaseRefreshView.setPercent(1f, true);
+                //mBaseRefreshView.setPercent(1f, true);
+				mSnaappyRefreshView.setPercent(1f, true);
 
 				//NOTE we overscrolled listview from correct refreshing
 				// position, so need correcting its position
@@ -364,7 +379,7 @@ public class PullToRefreshView extends ViewGroup {
 
         @Override
         public void onAnimationEnd(Animation animation) {
-            mBaseRefreshView.stop();
+            /*mBaseRefreshView.stop();*/
             mCurrentOffsetTop = mTarget.getTop();
         }
     };
@@ -388,7 +403,8 @@ public class PullToRefreshView extends ViewGroup {
 
     private void setTargetOffsetTop(int offset, boolean requiresUpdate) {
         mTarget.offsetTopAndBottom(offset);
-        mBaseRefreshView.offsetTopAndBottom(offset);
+        /*mBaseRefreshView.offsetTopAndBottom(offset);*/
+		mSnaappyRefreshView.applyOffsetTop(offset);
         mCurrentOffsetTop = mTarget.getTop();
         if (requiresUpdate && android.os.Build.VERSION.SDK_INT < 11) {
             invalidate();
@@ -428,7 +444,7 @@ public class PullToRefreshView extends ViewGroup {
 
         mTarget.layout(left, top + mCurrentOffsetTop, left + width - right,
 				top + height - bottom + mCurrentOffsetTop);
-        mRefreshView.layout(left, top, left + width - right, top + height - bottom);
+		mSnaappyRefreshView.layout(left, top, left + width - right, top + height - bottom);
     }
 
     public void setOnRefreshListener(OnRefreshListener listener) {

@@ -3,12 +3,14 @@ package com.yalantis.pulltorefresh.sample;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import com.yalantis.pulltorefresh.library.PullToRefreshView;
 
@@ -19,9 +21,13 @@ import java.util.Map;
 
 public class PullToRefreshActivity extends ActionBarActivity {
 
+	private static final String TAG = "PullToRefreshActivity";
+
     public static final int REFRESH_DELAY = 3000;
 
     private PullToRefreshView mPullToRefreshView;
+
+	/*private TextView mTextView;*/
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,6 +71,20 @@ public class PullToRefreshActivity extends ActionBarActivity {
                 }, REFRESH_DELAY);
             }
         });
+
+		/*mTextView = (TextView) findViewById(R.id.textview);
+
+		String text = "Обороноспособность";
+		mTextView.setText(text);
+		Log.i(TAG, "TextView text: " + text);
+		Log.i(TAG, "TextView length: " + mTextView.length());
+
+		text = "Security Agency";
+		mTextView.setText(text);
+		Log.i(TAG, "TextView text: " + text);
+		Log.i(TAG, "TextView length: " + mTextView.length());*/
+
+
     }
 
     class SampleAdapter extends ArrayAdapter<Map<String, Integer>> {
