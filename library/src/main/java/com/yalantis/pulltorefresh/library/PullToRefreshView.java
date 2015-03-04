@@ -19,7 +19,6 @@ import android.widget.ImageView;
 
 import com.yalantis.pulltorefresh.library.refresh_view.BaseRefreshView;
 import com.yalantis.pulltorefresh.library.refresh_view.SnaappyRefreshView;
-import com.yalantis.pulltorefresh.library.refresh_view.SunRefreshView;
 import com.yalantis.pulltorefresh.library.util.Utils;
 
 import java.security.InvalidParameterException;
@@ -28,13 +27,19 @@ public class PullToRefreshView extends ViewGroup {
 
 	private static final String TAG = "PullToRefreshView";
 
-    private static final int DRAG_MAX_DISTANCE = 130;
-    private static final float DRAG_RATE = .5f;
+    //DRAG_FACTOR - насколько "тяжело" протащить ListView вниз,
+    //              насколько быстро  выдвигается refreshView
+    //DRAG_MAX_DISTANCE - насколько далеко от вниз можно утащить ListView,
+    //                      на сколько по высоте можно показать refreshView
+    //(120, 0.5)
+
+    private static final int DRAG_MAX_DISTANCE = 100;
+    private static final float DRAG_FACTOR = .55f;
     private static final float DECELERATE_INTERPOLATION_FACTOR = 2f;
 
     public static final int STYLE_SUN = 0;
     public static final int STYLE_JET = 1;
-    public static final int MAX_OFFSET_ANIMATION_DURATION = 700;
+    public static final int MAX_OFFSET_ANIMATION_DURATION = 800;
 
     private static final int INVALID_POINTER = -1;
 
@@ -203,7 +208,7 @@ public class PullToRefreshView extends ViewGroup {
 
                 final float y = MotionEventCompat.getY(ev, pointerIndex);
                 final float yDiff = y - mInitialMotionY;
-                final float scrollTop = yDiff * DRAG_RATE;
+                final float scrollTop = yDiff * DRAG_FACTOR;
                 mCurrentDragPercent = scrollTop / mTotalDragDistance;
                 if (mCurrentDragPercent < 0) {
                     return false;
@@ -238,7 +243,7 @@ public class PullToRefreshView extends ViewGroup {
                 }
                 final int pointerIndex = MotionEventCompat.findPointerIndex(ev, mActivePointerId);
                 final float y = MotionEventCompat.getY(ev, pointerIndex);
-                final float overScrollTop = (y - mInitialMotionY) * DRAG_RATE;
+                final float overScrollTop = (y - mInitialMotionY) * DRAG_FACTOR;
                 mIsBeingDragged = false;
                 if (overScrollTop > mTotalDragDistance) {
                     setRefreshing(true, true);
